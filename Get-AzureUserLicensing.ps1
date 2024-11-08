@@ -34,20 +34,20 @@
     Libraries, Modules, ...
 #>
 
+#Requires -Version 7
+#Requires -Modules Microsoft.Graph
+Import-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users
+
 #endregion INITIALIZATION
 #region DECLARATIONS
 <#
     Declare local variables and global variables
 #>
 
-$Object = @()
-
 # The following variables have to be set by your skript runner:
-<# 
-$AzAppId = ''
-$AzTenantId = ''
-$LocalCertThumb = ''
-#>
+$AzAppId = $args[0]
+$AzTenantId = $args[1]
+$LocalCertThumb = $args[3]
 
 #endregion DECLARATIONS
 #region FUNCTIONS
@@ -97,29 +97,36 @@ function Write-ConsoleLog {
     $VerbosePreference = $VerbosePreferenceBefore
 }
 
-
-
 #endregion FUNCTIONS
 #region EXECUTION
 <# 
     Script entry point
 #>
 
+# Suppress output by assigning to null
 $null = Connect-MgGraph -ClientID $AzAppId -TenantId $AzTenantId -CertificateThumbprint $LocalCertThumb -NoWelcome
 
-$licenses = Get-MgSubscribedSku | Select-Object Id, ConsumedUnits, SkuId, SkuPartNumber, @{Name = 'Name'; Expression = {switch ($_.SkuPartNumber) {
-    # https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
-    'VISIOCLIENT' { 'Visio' }
-    'ENTERPRISEPACK' { 'Office 365 E3' }
-    'FLOW_FREE' { 'Microsoft Power Automate Free' }
-    'SPB' { 'Microsoft 365 Business Premium' }
-    'O365_BUSINESS_ESSENTIALS' { 'Microsoft 365 Business Basic' }
-    Default {'Unbekannte Lizenz'}
-}}}
+$licenses = Get-MgSubscribedSku | 
+    Select-Object Id, ConsumedUnits, SkuId, SkuPartNumber, 
+    @{Name = 'Name'; Expression = {switch ($_.SkuPartNumber) {
+        # https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
+        'VISIOCLIENT' { 'Visio' }
+        'ENTERPRISEPACK' { 'Office 365 E3' }
+        'FLOW_FREE' { 'Microsoft Power Automate Free' }
+        'SPB' { 'Microsoft 365 Business Premium' }
+        'O365_BUSINESS_ESSENTIALS' { 'Microsoft 365 Business Basic' }
+        Default {'Unbekannte Lizenz'}
+    }}}
 
-$Object += Get-MgUser -Filter 'accountEnabled eq true' -All -Property DisplayName, AssignedLicenses, DisplayName, Givenname, Surname, UserPrincipalName, OnPremisesSamAccountName | Sort-Object -Property DisplayName | Select-Object @{Name = 'Kunde'; Expression = {'DRKNDK'}}, @{Name = 'CenterLÖSUNG'; Expression = {'CenterOFFICE'}}, @{Name = 'Lizenzierung'; Expression = {foreach ($l in $_.AssignedLicenses) {
-    $licenses.Where({$_.SkuId -eq $l.SkuId}).Name
-}}}, DisplayName, Givenname, Surname, UserPrincipalName, OnPremisesSamAccountName
+$Properties = 'DisplayName', 'AssignedLicenses', 'DisplayName', 'Givenname', 'Surname', 'UserPrincipalName', 'OnPremisesSamAccountName'
+$Object = Get-MgUser -All -Filter 'accountEnabled eq true' -Property $Properties | 
+    Sort-Object -Property DisplayName | 
+    Select-Object @{Name = 'Kunde'; Expression = {'DRKNDK'}}, 
+        @{Name = 'CenterLÖSUNG'; Expression = {'CenterOFFICE'}}, 
+        @{Name = 'Lizenzierung'; Expression = {foreach ($l in $_.AssignedLicenses) {
+            $licenses.Where({$_.SkuId -eq $l.SkuId}).Name
+        }}}, 
+        DisplayName, Givenname, Surname, UserPrincipalName, OnPremisesSamAccountName
 
 $null = Disconnect-MgGraph
 
