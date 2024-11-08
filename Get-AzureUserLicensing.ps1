@@ -1,15 +1,9 @@
 <#
 .SYNOPSIS
-    T22-000215 - Rechnungsversand automatisieren
+    Get-AzureUserLicensing
 
 .DESCRIPTION
     Long description
-
-.SYNTAX
-
-
-.PARAMETERS
-
 
 .EXAMPLE
     PS C:\> <example usage>
@@ -21,23 +15,18 @@
 .OUTPUTS
     Output (if any)
 
-.RELATED LINKS
-    GitHub: https://github.com/MichaelSchoenburg/T22-000215
+.LINK
+    GitHub: https://github.com/MichaelSchoenburg/Get-AzureUserLicensing
 
 .NOTES
     Author: Michael Schönburg
     Version: v1.0
-    Last Edit: 11.02.2021
+    Creation: 08.11.2024
+    Last Edit: 08.11.2024
     
     This projects code loosely follows the PowerShell Practice and Style guide, as well as Microsofts PowerShell scripting performance considerations.
     Style guide: https://poshcode.gitbook.io/powershell-practice-and-style/
     Performance Considerations: https://docs.microsoft.com/en-us/powershell/scripting/dev-cross-plat/performance/script-authoring-considerations?view=powershell-7.1
-
-.REMARKS
-    To see the examples, type: "get-help Get-HotFix -examples".
-    For more information, type: "get-help Get-HotFix -detailed".
-    For technical information, type: "get-help Get-HotFix -full".
-    For online help, type: "get-help Get-HotFix -online"
 #>
 
 #region INITIALIZATION
@@ -51,6 +40,14 @@
     Declare local variables and global variables
 #>
 
+$Object = @()
+
+# The following variables have to be set by your skript runner:
+<# 
+$AzAppId = ''
+$AzTenantId = ''
+$LocalCertThumb = ''
+#>
 
 #endregion DECLARATIONS
 #region FUNCTIONS
@@ -108,6 +105,24 @@ function Write-ConsoleLog {
     Script entry point
 #>
 
+$null = Connect-MgGraph -ClientID $AzAppId -TenantId $AzTenantId -CertificateThumbprint $LocalCertThumb -NoWelcome
 
+$licenses = Get-MgSubscribedSku | Select-Object Id, ConsumedUnits, SkuId, SkuPartNumber, @{Name = 'Name'; Expression = {switch ($_.SkuPartNumber) {
+    # https://learn.microsoft.com/en-us/entra/identity/users/licensing-service-plan-reference
+    'VISIOCLIENT' { 'Visio' }
+    'ENTERPRISEPACK' { 'Office 365 E3' }
+    'FLOW_FREE' { 'Microsoft Power Automate Free' }
+    'SPB' { 'Microsoft 365 Business Premium' }
+    'O365_BUSINESS_ESSENTIALS' { 'Microsoft 365 Business Basic' }
+    Default {'Unbekannte Lizenz'}
+}}}
+
+$Object += Get-MgUser -Filter 'accountEnabled eq true' -All -Property DisplayName, AssignedLicenses, DisplayName, Givenname, Surname, UserPrincipalName, OnPremisesSamAccountName | Sort-Object -Property DisplayName | Select-Object @{Name = 'Kunde'; Expression = {'DRKNDK'}}, @{Name = 'CenterLÖSUNG'; Expression = {'CenterOFFICE'}}, @{Name = 'Lizenzierung'; Expression = {foreach ($l in $_.AssignedLicenses) {
+    $licenses.Where({$_.SkuId -eq $l.SkuId}).Name
+}}}, DisplayName, Givenname, Surname, UserPrincipalName, OnPremisesSamAccountName
+
+$null = Disconnect-MgGraph
+
+$Object | ConvertTo-Json # http://json2table.com/#
 
 #endregion EXECUTION
