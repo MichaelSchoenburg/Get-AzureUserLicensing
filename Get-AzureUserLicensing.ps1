@@ -89,7 +89,6 @@ $Object = Get-MgUser -All -Filter 'accountEnabled eq true' -Property $Properties
 
 $null = Disconnect-MgGraph
 
-
 $Json = $Object | ConvertTo-Json
 
 # Output
