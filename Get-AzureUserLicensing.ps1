@@ -34,7 +34,6 @@
     Libraries, Modules, ...
 #>
 
-#Requires -Version 7
 #Requires -Modules Microsoft.Graph
 Import-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users
 
@@ -45,9 +44,11 @@ Import-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users
 #>
 
 # The following variables have to be set by your skript runner:
+<# 
 $AzAppId = $args[0]
 $AzTenantId = $args[1]
 $LocalCertThumb = $args[3]
+#>
 
 #endregion DECLARATIONS
 #region FUNCTIONS
@@ -88,6 +89,11 @@ $Object = Get-MgUser -All -Filter 'accountEnabled eq true' -Property $Properties
 
 $null = Disconnect-MgGraph
 
-$Object | ConvertTo-Json # http://json2table.com/#
+
+$Json = $Object | ConvertTo-Json
+
+# Output
+Write-Output 'Grafische Aufbereitung zum Debuggen: http://json2table.com/'
+Write-Output "$($Json.ToString())" # Funktioniert mit Riverbird aus irgendeinem Grund nur auf diese Art und Weise.
 
 #endregion EXECUTION
