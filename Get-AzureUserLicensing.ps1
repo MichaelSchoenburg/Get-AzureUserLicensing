@@ -35,6 +35,7 @@
 #>
 
 #Requires -Modules Microsoft.Graph
+$MaximumVariableCount = 8192 # Graph Module has more than 4096 variables
 Import-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users
 
 #endregion INITIALIZATION
