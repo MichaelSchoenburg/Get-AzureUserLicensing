@@ -46,9 +46,9 @@ Import-Module Microsoft.Graph.Authentication, Microsoft.Graph.Users
 
 # The following variables have to be set by your skript runner:
 <# 
-$AzAppId = $args[0]
-$AzTenantId = $args[1]
-$LocalCertThumb = $args[3]
+$AzAppId = 'Hier eintragen'
+$AzTenantId = 'Hier eintragen'
+$LocalCertThumb = 'Hier eintragen'
 #>
 
 #endregion DECLARATIONS
@@ -94,6 +94,11 @@ $Json = $Object | ConvertTo-Json
 
 # Output
 Write-Output 'Grafische Aufbereitung zum Debuggen: http://json2table.com/'
-Write-Output "$($Json.ToString())" # Funktioniert mit Riverbird aus irgendeinem Grund nur auf diese Art und Weise.
+Write-Output '$Json.ToString()'
+Write-Output $Json.ToString()
+Write-Output '"$($Json.ToString())"'
+Write-Output "$($Json.ToString())"
+Write-Output '$Json'
+Write-Output $Json
 
 #endregion EXECUTION
