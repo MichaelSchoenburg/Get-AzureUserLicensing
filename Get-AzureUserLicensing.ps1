@@ -2,19 +2,6 @@
 .SYNOPSIS
     Get-AzureUserLicensing
 
-.DESCRIPTION
-    Long description
-
-.EXAMPLE
-    PS C:\> <example usage>
-    Explanation of what the example does
-
-.INPUTS
-    Inputs (if any)
-
-.OUTPUTS
-    Output (if any)
-
 .LINK
     GitHub: https://github.com/MichaelSchoenburg/Get-AzureUserLicensing
 
